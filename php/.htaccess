@@ -1,0 +1,16 @@
+Options -Indexes
+DirectoryIndex index.php
+
+RewriteEngine On
+
+# Altijd via HTTPS (verwijder deze twee regels als je nog geen SSL-certificaat hebt)
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Gevoelige bestanden en mappen afschermen
+RewriteRule ^(inc/|config\.php|config\.sample\.php|schema\.sql|README\.md) - [F,L]
+
+# https://qr.pausefish.com/<code>  →  index.php?c=<code>
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([A-Za-z0-9_-]+)/?$ index.php?c=$1 [L,QSA]

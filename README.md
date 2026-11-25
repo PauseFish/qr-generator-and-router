@@ -1,5 +1,9 @@
 # QR generator & router
 
+> **Twee versies:**
+> - **PHP + MySQL (aanbevolen voor eigen hosting, bijv. Vimexx):** zie [`php/README.md`](php/README.md). Met login, direct live wijzigingen en een scanteller.
+> - **GitHub Pages (statisch):** de rest van deze README.
+
 QR-codes met een **vaste URL** waarvan je de **bestemming altijd kunt wijzigen**.
 Alles draait statisch op GitHub Pages — geen server of database nodig.
 
