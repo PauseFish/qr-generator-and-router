@@ -28,6 +28,7 @@
         .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json(); })
         .then(function (links) {
           var dest = links[code];
+          if (dest && typeof dest === 'object') dest = dest.url;
           if (!dest || !/^https?:\/\//i.test(dest)) {
             msg.textContent = 'Onbekende of ongeldige QR-code: "' + code + '".';
             return;
