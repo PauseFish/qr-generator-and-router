@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Nieuwe QR-code</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Nieuwe QR-code</h1>
+  <p class="lead">De QR-code krijgt een vaste URL. De bestemming kun je later altijd wijzigen.</p>
+  <div class="split">
+    <form class="card" id="form" novalidate>
+      <div class="field">
+        <label for="label">Naam</label>
+        <input id="label" placeholder="bijv. Menukaart restaurant" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="code">Code (komt in de URL)</label>
+        <input id="code" placeholder="bijv. menu" autocomplete="off" required>
+        <p class="hint">Kleine letters, cijfers, - en _. Kan na het aanmaken niet meer veranderen.</p>
+      </div>
+      <div class="field">
+        <label for="url">Bestemming</label>
+        <input id="url" type="url" placeholder="https://…" required>
+      </div>
+      <div class="field">
+        <label>Vaste URL in de QR-code</label>
+        <input id="fixed" readonly>
+      </div>
+      <div class="actions"><button id="submit" type="submit">QR-code aanmaken</button></div>
+    </form>
+    <div class="card qr-panel">
+      <label>Voorbeeld</label>
+      <div class="qr-box" id="preview"></div>
+      <p class="hint">Na het aanmaken kun je hem downloaden als PNG of SVG.</p>
+    </div>
+  </div>
+</main>
+<script src="../vendor/qrcode.js"></script>
+<script src="../assets/app.js"></script>
+<script>
+  var $ = function (id) { return document.getElementById(id); }, codeTouched = false;
+  App.chrome('nieuw');
+
+  function preview() {
+    var code = $('code').value;
+    $('fixed').value = code ? App.fixedUrl(code) : '';
+    $('preview').innerHTML = '';
+    $('preview').appendChild(App.qrCanvas(App.fixedUrl(code || 'voorbeeld'), 220));
+    $('preview').style.opacity = code ? 1 : .25;
+  }
+  // Code automatisch afleiden uit de naam, tot je hem zelf aanpast
+  $('label').addEventListener('input', function () {
+    if (!codeTouched) { $('code').value = App.cleanCode(this.value.trim().replace(/\s+/g, '-')).replace(/-+/g, '-').replace(/^-|-$/g, ''); preview(); }
+  });
+  $('code').addEventListener('input', function () { codeTouched = true; this.value = App.cleanCode(this.value); preview(); });
+
+  $('form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var code = $('code').value, label = $('label').value.trim(), url = $('url').value.trim(), btn = $('submit');
+    if (!App.validCode(code)) return App.toast('Vul een geldige code in.', true);
+    if (!App.validUrl(url)) return App.toast('Ongeldige bestemming (moet met http:// of https:// beginnen).', true);
+    App.busy(btn, true, 'Aanmaken…');
+    App.commit('Add QR "' + code + '" → ' + url, function (d) {
+      if (d[code]) throw new Error('Code "' + code + '" bestaat al. Kies een andere code.');
+      d[code] = { url: url, label: label };
+    }).then(function () {
+      location.href = App.url('bewerk/', { c: code, nieuw: 1 });
+    }).catch(function (e) { App.busy(btn, false); App.toast(e.message, true); });
+  });
+  preview();
+</script>
+</body>
+</html>

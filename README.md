@@ -12,7 +12,11 @@ QR-code  →  https://pausefish.github.io/qr-generator-and-router/r/?menu
              "menu": "https://jouw-bestemming.nl"  →  doorsturen
 ```
 
-- `index.html` — het dashboard: QR-codes aanmaken, bestemming wijzigen, verwijderen, downloaden als PNG/SVG.
+- `index.html` — overzicht van alle QR-codes.
+- `nieuw/` — nieuwe QR-code aanmaken.
+- `bewerk/?c=<code>` — één QR-code bewerken (bestemming/naam wijzigen, downloaden, verwijderen).
+- `instellingen/` — GitHub-token koppelen.
+- `assets/` — gedeelde opmaak en logica.
 - `r/index.html` — de router: zoekt de code op in `links.json` en stuurt door.
 - `links.json` — de lijst met codes en bestemmingen. **Dit is het enige bestand dat je hoeft aan te passen.**
 
@@ -30,15 +34,15 @@ Daarvoor heeft het een GitHub-token nodig:
 1. Ga naar <https://github.com/settings/personal-access-tokens/new>.
 2. *Repository access* → **Only select repositories** → deze repository.
 3. *Permissions* → **Contents: Read and write**.
-4. Plak het token in het dashboard onder **Instellingen & GitHub-koppeling** en klik **Opslaan & verbinden**.
+4. Plak het token op de pagina **Instellingen** en klik **Opslaan & verbinding testen**.
 
 Het token wordt alleen in je eigen browser bewaard (localStorage). Zonder token kun je
 het dashboard bekijken en QR-codes downloaden, maar niets wijzigen.
 
 ## Gebruik
 
-- **Nieuwe QR-code:** vul code, naam en bestemming in en klik *Aanmaken*. Download daarna de PNG/SVG.
-- **Bestemming wijzigen:** pas de URL bij de QR-code aan en klik *Opslaan*.
+- **Nieuwe QR-code:** ga naar *Nieuwe QR-code*, vul naam en bestemming in en klik *QR-code aanmaken*. Je komt daarna op de bewerkpagina, waar je de PNG/SVG downloadt.
+- **Bestemming wijzigen:** klik in het overzicht op *Bewerken*, pas de bestemming aan en klik *Wijzigingen opslaan*.
 - Wijzigingen zijn na de Pages-deploy (~1 minuut) live; de QR-code zelf blijft hetzelfde.
 
 > Let op: verander de **code** (de naam links) niet en verplaats de repository niet,

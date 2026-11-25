@@ -4,322 +4,61 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>QR Dashboard</title>
-  <style>
-    :root { --bg: #f5f6f8; --card: #fff; --text: #1c1f24; --muted: #667085; --border: #e3e6eb; --accent: #0b5cad; --accent-text: #fff; --danger: #c0352b; --ok: #1a7f4b; --warn: #b45309; --field: #f8f9fb; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg: #121418; --card: #1b1e24; --text: #e8eaee; --muted: #98a1b0; --border: #2c313a; --accent: #6aa8ff; --accent-text: #0b1220; --danger: #ff7b72; --ok: #4ccf8a; --warn: #f0b35a; --field: #15181d; }
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; }
-    main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
-    header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-    h1 { margin: 0; font-size: 1.5rem; flex: 1; }
-    h2 { font-size: 1rem; margin: 0 0 12px; }
-    .pill { font-size: .8rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); }
-    .pill.ok { color: var(--ok); } .pill.ro { color: var(--warn); }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
-    label { display: block; font-weight: 600; font-size: .82rem; margin: 0 0 4px; color: var(--muted); }
-    input { width: 100%; padding: 8px 10px; font: inherit; font-size: .95rem; border: 1px solid var(--border); border-radius: 8px; background: var(--field); color: var(--text); min-width: 0; }
-    input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-    .row { display: grid; gap: 12px; grid-template-columns: 1fr 1fr 2fr auto; align-items: end; }
-    .row2 { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
-    @media (max-width: 760px) { .row, .row2 { grid-template-columns: 1fr; } }
-    button { padding: 8px 14px; font: inherit; font-size: .9rem; font-weight: 600; border: 1px solid transparent; border-radius: 8px; background: var(--accent); color: var(--accent-text); cursor: pointer; white-space: nowrap; }
-    button.ghost { background: transparent; color: var(--accent); border-color: var(--border); }
-    button.danger { background: transparent; color: var(--danger); border-color: var(--border); }
-    button:disabled { opacity: .45; cursor: default; }
-    .hint { color: var(--muted); font-size: .82rem; margin: 6px 0 0; }
-    .hint a { color: var(--accent); }
-    details summary { cursor: pointer; font-weight: 600; }
-    details[open] summary { margin-bottom: 14px; }
-    .settings-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-    .toolbar { display: flex; gap: 12px; align-items: center; margin: 8px 0 12px; flex-wrap: wrap; }
-    .toolbar input { max-width: 320px; }
-    .toolbar .count { color: var(--muted); font-size: .9rem; }
-    .qr-item { display: grid; grid-template-columns: 132px 1fr; gap: 18px; align-items: start; }
-    @media (max-width: 560px) { .qr-item { grid-template-columns: 1fr; } }
-    .qr-box { background: #fff; border-radius: 10px; padding: 6px; width: 132px; height: 132px; border: 1px solid var(--border); }
-    .qr-box canvas { width: 120px; height: 120px; display: block; }
-    .title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-    .title strong { font-size: 1.05rem; }
-    .code { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; color: var(--muted); }
-    .fixed { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; color: var(--muted); word-break: break-all; margin: 0 0 10px; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .target-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    @media (max-width: 760px) { .target-row { grid-template-columns: 1fr; } }
-    .empty { text-align: center; color: var(--muted); padding: 32px 16px; }
-    #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: .9rem; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: calc(100% - 32px); }
-    #toast.show { opacity: 1; }
-    #toast.err { background: var(--danger); color: #fff; }
-    code { font-family: ui-monospace, Consolas, monospace; font-size: .85em; }
-  </style>
+  <title>Alle QR-codes</title>
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 <main>
-  <header>
-    <h1>QR Dashboard</h1>
-    <span id="status" class="pill ro">Alleen lezen</span>
-  </header>
-
-  <details class="card" id="settings">
-    <summary>Instellingen &amp; GitHub-koppeling</summary>
-    <div class="settings-grid">
-      <div><label for="token">GitHub-token</label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…"></div>
-      <div><label for="owner">Eigenaar</label><input id="owner"></div>
-      <div><label for="repo">Repository</label><input id="repo"></div>
-      <div><label for="branch">Branch</label><input id="branch"></div>
-      <div style="grid-column: 1 / -1"><label for="base">Basis-URL van de router (staat in elke QR-code)</label><input id="base"></div>
-    </div>
-    <div class="actions">
-      <button id="saveSettings">Opslaan &amp; verbinden</button>
-      <button id="forget" class="danger">Token vergeten</button>
-    </div>
-    <p class="hint">
-      Maak een <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> aan:
-      <em>Repository access</em> → alleen deze repository, <em>Permissions</em> → <em>Contents: Read and write</em>.
-      Het token wordt alleen in deze browser bewaard. Wijzig de basis-URL niet meer nadat je QR-codes hebt geprint.
-    </p>
-  </details>
-
-  <section class="card">
-    <h2>Nieuwe QR-code</h2>
-    <div class="row">
-      <div><label for="newCode">Code (komt in de URL)</label><input id="newCode" placeholder="bijv. menu" autocomplete="off"></div>
-      <div><label for="newLabel">Naam (optioneel)</label><input id="newLabel" placeholder="bijv. Menukaart"></div>
-      <div><label for="newUrl">Bestemming</label><input id="newUrl" type="url" placeholder="https://…"></div>
-      <button id="create">Aanmaken</button>
-    </div>
-    <p class="hint">Code: kleine letters, cijfers, - en _. De code kan later niet meer veranderen, de bestemming wel.</p>
-  </section>
-
+  <h1>Alle QR-codes</h1>
+  <p class="lead">Elke QR-code heeft een vaste URL. Klik op <strong>Bewerken</strong> om de bestemming te wijzigen.</p>
   <div class="toolbar">
-    <input id="search" type="search" placeholder="Zoeken…">
-    <span class="count" id="count"></span>
-    <span style="flex:1"></span>
-    <button id="reload" class="ghost">Vernieuwen</button>
+    <input id="search" type="search" placeholder="Zoeken op naam, code of bestemming…">
+    <span class="muted" id="count"></span>
+    <span class="spacer" style="flex:1"></span>
+    <a class="btn" id="newBtn">+ Nieuwe QR-code</a>
   </div>
-
-  <div id="list"></div>
+  <div id="list"><div class="card empty">Laden…</div></div>
 </main>
-<div id="toast"></div>
-
 <script src="vendor/qrcode.js"></script>
+<script src="assets/app.js"></script>
 <script>
-(function () {
-  var $ = function (id) { return document.getElementById(id); };
-  var LS = 'qrdash:';
-  var store = {
-    get: function (k) { try { return localStorage.getItem(LS + k); } catch (e) { return null; } },
-    set: function (k, v) { try { v == null ? localStorage.removeItem(LS + k) : localStorage.setItem(LS + k, v); } catch (e) {} }
-  };
-
-  // ---------- Instellingen ----------
-  var pageBase = location.href.split(/[?#]/)[0].replace(/[^/]*$/, '');
-  var guessOwner = '', guessRepo = '';
-  if (/\.github\.io$/i.test(location.hostname)) {
-    guessOwner = location.hostname.split('.')[0];
-    guessRepo = location.pathname.split('/').filter(Boolean)[0] || location.hostname;
-  }
-  var cfg = {
-    token: store.get('token') || '',
-    owner: store.get('owner') || guessOwner,
-    repo: store.get('repo') || guessRepo,
-    branch: store.get('branch') || 'main',
-    base: store.get('base') || pageBase + 'r/'
-  };
-  ['token', 'owner', 'repo', 'branch', 'base'].forEach(function (k) { $(k).value = cfg[k]; });
-  if (!cfg.token) $('settings').open = true;
-
-  // ---------- Data ----------
-  var links = {};   // code -> { url, label }
-  var sha = null;   // sha van links.json (nodig om te schrijven)
-
-  function norm(v) {
-    if (typeof v === 'string') return { url: v, label: '' };
-    if (v && typeof v === 'object') return { url: String(v.url || ''), label: String(v.label || '') };
-    return { url: '', label: '' };
-  }
-  function parse(json) {
-    var out = {}, data = JSON.parse(json || '{}');
-    Object.keys(data).forEach(function (k) { out[k] = norm(data[k]); });
-    return out;
-  }
-  function serialize(obj) {
-    var out = {};
-    Object.keys(obj).forEach(function (k) {
-      out[k] = obj[k].label ? { url: obj[k].url, label: obj[k].label } : obj[k].url;
-    });
-    return JSON.stringify(out, null, 2) + '\n';
-  }
-  function b64decode(s) { var bin = atob(s.replace(/\s/g, '')); var bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return new TextDecoder().decode(bytes); }
-  function b64encode(s) { var bytes = new TextEncoder().encode(s), bin = ''; for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); }
-
-  function api(path, opts) {
-    opts = opts || {};
-    opts.headers = Object.assign({ 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + cfg.token, 'X-GitHub-Api-Version': '2022-11-28' }, opts.headers || {});
-    opts.cache = 'no-store';
-    return fetch('https://api.github.com/repos/' + encodeURIComponent(cfg.owner) + '/' + encodeURIComponent(cfg.repo) + path, opts)
-      .then(function (r) {
-        if (r.ok) return r.json();
-        return r.json().catch(function () { return {}; }).then(function (body) {
-          var m = { 401: 'Token ongeldig of verlopen.', 403: 'Token heeft geen schrijfrechten (Contents: Read and write).', 404: 'Repository, branch of links.json niet gevonden — of het token heeft geen toegang.', 409: 'Conflict: het bestand is net gewijzigd. Probeer opnieuw.', 422: 'GitHub weigerde de wijziging.' }[r.status];
-          var err = new Error(m || ('GitHub-fout ' + r.status + (body.message ? ': ' + body.message : '')));
-          err.status = r.status; throw err;
-        });
-      });
-  }
-  var filePath = '/contents/links.json';
-
-  function fetchRemote() {
-    return api(filePath + '?ref=' + encodeURIComponent(cfg.branch)).then(function (f) {
-      sha = f.sha; return parse(b64decode(f.content));
-    });
-  }
-
-  function load() {
-    var p = cfg.token
-      ? fetchRemote()
-      : fetch('links.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('links.json niet gevonden'); return r.text(); }).then(parse);
-    return p.then(function (data) { links = data; setStatus(!!cfg.token); render(); })
-      .catch(function (e) { setStatus(false); toast(e.message, true); render(); });
-  }
-
-  // Haalt altijd de nieuwste versie op, past mutate toe en schrijft terug.
-  function commit(message, mutate) {
-    if (!cfg.token) { $('settings').open = true; toast('Vul eerst een GitHub-token in om te kunnen opslaan.', true); return Promise.reject(); }
-    setBusy(true);
-    return fetchRemote().then(function (fresh) {
-      mutate(fresh);
-      return api(filePath, { method: 'PUT', body: JSON.stringify({ message: message, content: b64encode(serialize(fresh)), sha: sha, branch: cfg.branch }) })
-        .then(function (res) { sha = res.content.sha; links = fresh; render(); toast('Opgeslagen. Live binnen ±1 minuut.'); });
-    }).catch(function (e) { if (e) toast(e.message, true); throw e; })
-      .finally(function () { setBusy(false); });
-  }
-
-  // ---------- QR ----------
-  function fixedUrl(code) { var b = cfg.base.trim(); if (b && !/\/$/.test(b)) b += '/'; return b + '?' + code; }
-  function makeQr(text) { var q = qrcode(0, 'M'); q.addData(text); q.make(); return q; }
-  function drawQr(canvas, text, cssSize) {
-    var q = makeQr(text), n = q.getModuleCount(), quiet = 2, total = n + quiet * 2;
-    var dpr = window.devicePixelRatio || 1, px = Math.round(cssSize * dpr);
-    canvas.width = canvas.height = px;
-    var ctx = canvas.getContext('2d'), cell = px / total;
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, px, px); ctx.fillStyle = '#000';
-    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
-      if (q.isDark(r, c)) ctx.fillRect(Math.floor((c + quiet) * cell), Math.floor((r + quiet) * cell), Math.ceil(cell), Math.ceil(cell));
-  }
-  function download(name, href) { var a = document.createElement('a'); a.href = href; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
-  function downloadPng(code) {
-    var q = makeQr(fixedUrl(code)), n = q.getModuleCount(), quiet = 4, s = 20, px = (n + quiet * 2) * s;
-    var cv = document.createElement('canvas'); cv.width = cv.height = px;
-    var ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, px, px); ctx.fillStyle = '#000';
-    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) ctx.fillRect((c + quiet) * s, (r + quiet) * s, s, s);
-    download('qr-' + code + '.png', cv.toDataURL('image/png'));
-  }
-  function downloadSvg(code) {
-    var q = makeQr(fixedUrl(code)), n = q.getModuleCount(), quiet = 4, t = n + quiet * 2, d = '';
-    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d += 'M' + (c + quiet) + ' ' + (r + quiet) + 'h1v1h-1z';
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + t + ' ' + t + '" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
-    download('qr-' + code + '.svg', URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })));
-  }
-
-  // ---------- UI ----------
-  function el(tag, attrs, children) {
-    var e = document.createElement(tag);
-    Object.keys(attrs || {}).forEach(function (k) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'on') Object.keys(attrs.on).forEach(function (ev) { e.addEventListener(ev, attrs.on[ev]); }); else e.setAttribute(k, attrs[k]); });
-    (children || []).forEach(function (c) { if (c) e.appendChild(c); });
-    return e;
-  }
-  function validUrl(u) { try { var x = new URL(u); return x.protocol === 'https:' || x.protocol === 'http:'; } catch (e) { return false; } }
+  var el = App.el, links = {};
+  App.chrome('overzicht');
+  document.getElementById('newBtn').href = App.url('nieuw');
 
   function render() {
-    var list = $('list'), q = $('search').value.trim().toLowerCase();
+    var list = document.getElementById('list'), q = document.getElementById('search').value.trim().toLowerCase();
     var codes = Object.keys(links);
     var shown = codes.filter(function (k) { return !q || (k + ' ' + links[k].label + ' ' + links[k].url).toLowerCase().indexOf(q) !== -1; });
-    $('count').textContent = codes.length + (codes.length === 1 ? ' QR-code' : ' QR-codes');
+    document.getElementById('count').textContent = codes.length + (codes.length === 1 ? ' QR-code' : ' QR-codes');
     list.innerHTML = '';
-    if (!shown.length) { list.appendChild(el('div', { class: 'card empty', text: codes.length ? 'Geen resultaten.' : 'Nog geen QR-codes. Maak er hierboven een aan.' })); return; }
-
+    if (!codes.length) {
+      list.appendChild(el('div', { class: 'card empty' }, ['Nog geen QR-codes. ', el('a', { href: App.url('nieuw'), text: 'Maak je eerste QR-code aan' }), '.']));
+      return;
+    }
+    if (!shown.length) { list.appendChild(el('div', { class: 'card empty', text: 'Geen resultaten.' })); return; }
+    var grid = el('div', { class: 'grid' });
     shown.forEach(function (code) {
-      var item = links[code];
-      var canvas = el('canvas');
-      var urlIn = el('input', { type: 'url', value: item.url, 'aria-label': 'Bestemming' });
-      var labelIn = el('input', { value: item.label, placeholder: 'Naam', 'aria-label': 'Naam' });
-      var save = el('button', { text: 'Opslaan', disabled: '' });
-      var dirty = function () { save.disabled = urlIn.value.trim() === item.url && labelIn.value.trim() === item.label; };
-      urlIn.addEventListener('input', dirty); labelIn.addEventListener('input', dirty);
-
-      save.addEventListener('click', function () {
-        var u = urlIn.value.trim(), l = labelIn.value.trim();
-        if (!validUrl(u)) return toast('Ongeldige URL (moet met http:// of https:// beginnen).', true);
-        commit('Update QR "' + code + '" → ' + u, function (d) { d[code] = { url: u, label: l }; }).catch(function () {});
-      });
-
-      var fixed = fixedUrl(code);
-      var card = el('div', { class: 'card qr-item' }, [
-        el('div', { class: 'qr-box' }, [canvas]),
-        el('div', {}, [
-          el('div', { class: 'title' }, [el('strong', { text: item.label || code }), el('span', { class: 'code', text: code })]),
-          el('p', { class: 'fixed', text: fixed }),
-          el('div', { class: 'target-row' }, [
-            el('div', {}, [el('label', { text: 'Bestemming' }), urlIn]),
-            el('div', {}, [el('label', { text: 'Naam' }), labelIn])
-          ]),
-          el('div', { class: 'actions' }, [
-            save,
-            el('button', { class: 'ghost', text: 'PNG', on: { click: function () { downloadPng(code); } } }),
-            el('button', { class: 'ghost', text: 'SVG', on: { click: function () { downloadSvg(code); } } }),
-            el('button', { class: 'ghost', text: 'Kopieer URL', on: { click: function () { navigator.clipboard.writeText(fixed).then(function () { toast('URL gekopieerd.'); }); } } }),
-            el('button', { class: 'ghost', text: 'Test', on: { click: function () { window.open(fixed, '_blank', 'noopener'); } } }),
-            el('button', { class: 'danger', text: 'Verwijderen', on: { click: function () {
-              if (!confirm('QR-code "' + code + '" verwijderen?\n\nGeprinte exemplaren werken daarna niet meer.')) return;
-              commit('Delete QR "' + code + '"', function (d) { delete d[code]; }).catch(function () {});
-            } } })
-          ])
+      var item = links[code], editUrl = App.url('bewerk/', { c: code });
+      grid.appendChild(el('div', { class: 'card tile' }, [
+        el('div', { class: 'tile-head' }, [
+          el('a', { class: 'qr-box', href: editUrl, title: 'Bewerken' }, [App.qrCanvas(App.fixedUrl(code), 76)]),
+          el('div', {}, [el('h3', { text: item.label || code }), el('span', { class: 'mono muted', text: code })])
+        ]),
+        el('div', { class: 'dest', title: item.url }, ['→ ', el('a', { href: item.url, target: '_blank', rel: 'noopener', text: item.url })]),
+        el('div', { class: 'actions' }, [
+          el('a', { class: 'btn', href: editUrl, text: 'Bewerken' }),
+          el('button', { class: 'ghost', text: 'PNG', on: { click: function () { App.downloadPng(code); } } }),
+          el('button', { class: 'ghost', text: 'SVG', on: { click: function () { App.downloadSvg(code); } } })
         ])
-      ]);
-      list.appendChild(card);
-      drawQr(canvas, fixed, 120);
+      ]));
     });
+    list.appendChild(grid);
   }
 
-  function setStatus(connected) {
-    $('status').textContent = connected ? 'Verbonden met ' + cfg.owner + '/' + cfg.repo : 'Alleen lezen';
-    $('status').className = 'pill ' + (connected ? 'ok' : 'ro');
-  }
-  function setBusy(b) {
-    document.querySelectorAll('button').forEach(function (x) {
-      if (b) { x.dataset.wasDisabled = x.disabled; x.disabled = true; }
-      else if (x.dataset.wasDisabled !== undefined) { x.disabled = x.dataset.wasDisabled === 'true'; delete x.dataset.wasDisabled; }
-    });
-  }
-  var toastTimer;
-  function toast(msg, err) { var t = $('toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : ''); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.className = ''; }, err ? 5000 : 2500); }
-
-  // ---------- Events ----------
-  $('saveSettings').addEventListener('click', function () {
-    ['token', 'owner', 'repo', 'branch', 'base'].forEach(function (k) { cfg[k] = $(k).value.trim(); store.set(k, cfg[k] || null); });
-    load().then(function () { if (cfg.token && sha) { $('settings').open = false; toast('Verbonden.'); } });
-  });
-  $('forget').addEventListener('click', function () { cfg.token = ''; $('token').value = ''; store.set('token', null); sha = null; load(); toast('Token verwijderd uit deze browser.'); });
-  $('reload').addEventListener('click', load);
-  $('search').addEventListener('input', render);
-  $('newCode').addEventListener('input', function () { this.value = this.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''); });
-
-  $('create').addEventListener('click', function () {
-    var code = $('newCode').value.trim(), label = $('newLabel').value.trim(), url = $('newUrl').value.trim();
-    if (!code) return toast('Vul een code in.', true);
-    if (!validUrl(url)) return toast('Ongeldige bestemming (moet met http:// of https:// beginnen).', true);
-    if (links[code]) return toast('Code "' + code + '" bestaat al.', true);
-    commit('Add QR "' + code + '" → ' + url, function (d) {
-      if (d[code]) throw new Error('Code "' + code + '" bestaat al.');
-      d[code] = { url: url, label: label };
-    }).then(function () { $('newCode').value = $('newLabel').value = $('newUrl').value = ''; $('search').value = ''; render(); }).catch(function () {});
-  });
-
-  load();
-})();
+  document.getElementById('search').addEventListener('input', render);
+  App.load().then(function (d) { links = d; render(); })
+    .catch(function (e) { App.toast(e.message, true); links = {}; render(); });
 </script>
 </body>
 </html>
