@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR Generator</title>
+  <style>
+    :root { --bg: #f6f7f9; --card: #fff; --text: #1c1f24; --muted: #667085; --border: #e3e6eb; --accent: #0b5cad; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #14161a; --card: #1d2026; --text: #e8eaee; --muted: #9aa3b2; --border: #2d323b; --accent: #6aa8ff; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    main { max-width: 880px; margin: 0 auto; padding: 32px 16px; }
+    h1 { margin: 0 0 4px; font-size: 1.6rem; }
+    .lead { color: var(--muted); margin: 0 0 24px; }
+    .grid { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: start; }
+    @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    label { display: block; font-weight: 600; font-size: .9rem; margin: 14px 0 4px; }
+    label:first-child { margin-top: 0; }
+    input, select { width: 100%; padding: 9px 11px; font: inherit; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+    .hint { color: var(--muted); font-size: .82rem; margin: 4px 0 0; }
+    .url { font-family: ui-monospace, monospace; font-size: .85rem; word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+    .dest { font-size: .9rem; word-break: break-all; }
+    .dest.missing { color: #c2410c; }
+    .qr { background: #fff; border-radius: 12px; padding: 12px; display: grid; place-items: center; }
+    .qr canvas { display: block; width: 260px; height: 260px; image-rendering: pixelated; }
+    .buttons { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    button { flex: 1; padding: 9px 12px; font: inherit; font-weight: 600; border: 0; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+    button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+    ol { padding-left: 20px; color: var(--muted); font-size: .9rem; }
+    code { font-family: ui-monospace, monospace; font-size: .85em; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>QR Generator</h1>
+  <p class="lead">Maak een QR-code met een vaste URL. De bestemming pas je later aan in <code>links.json</code> — de QR-code blijft hetzelfde.</p>
+
+  <div class="grid">
+    <section class="card">
+      <label for="code">Code (naam van de link)</label>
+      <input id="code" list="codes" placeholder="bijv. menu" autocomplete="off">
+      <datalist id="codes"></datalist>
+      <p class="hint">Alleen kleine letters, cijfers, - en _. Bestaande codes uit <code>links.json</code> worden voorgesteld.</p>
+
+      <label>Vaste URL in de QR-code</label>
+      <div class="url" id="fixedUrl">–</div>
+
+      <label>Huidige bestemming</label>
+      <div class="dest" id="dest">–</div>
+
+      <label for="base">Basis-URL van de router</label>
+      <input id="base">
+      <p class="hint">Wordt automatisch ingevuld op GitHub Pages. Alleen aanpassen als je een eigen domein gebruikt.</p>
+
+      <label for="ecc">Foutcorrectie</label>
+      <select id="ecc">
+        <option value="L">Laag (7%)</option>
+        <option value="M" selected>Gemiddeld (15%)</option>
+        <option value="Q">Hoog (25%)</option>
+        <option value="H">Zeer hoog (30%)</option>
+      </select>
+    </section>
+
+    <section class="card">
+      <div class="qr"><canvas id="canvas" width="260" height="260"></canvas></div>
+      <div class="buttons">
+        <button id="png">PNG</button>
+        <button id="svg" class="secondary">SVG</button>
+        <button id="copy" class="secondary">Kopieer URL</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:24px">
+    <strong>Bestemming wijzigen</strong>
+    <ol>
+      <li>Open <code>links.json</code> in deze repository op GitHub en klik op het potloodje.</li>
+      <li>Pas de URL achter je code aan (of voeg een nieuwe regel toe), bijv. <code>"menu": "https://nieuwe-site.nl"</code>.</li>
+      <li>Commit. Binnen ongeveer een minuut stuurt dezelfde QR-code door naar de nieuwe URL.</li>
+    </ol>
+  </section>
+</main>
+
+<script src="vendor/qrcode.js"></script>
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var links = {};
+  var currentText = '';
+
+  // Router staat in de map r/ naast deze pagina
+  $('base').value = new URL('r/', location.href.split(/[?#]/)[0]).href;
+
+  function sanitize(s) { return s.trim().toLowerCase().replace(/[^a-z0-9_-]/g, ''); }
+
+  function makeQr(text) {
+    var qr = qrcode(0, $('ecc').value);
+    qr.addData(text);
+    qr.make();
+    return qr;
+  }
+
+  function render() {
+    var code = sanitize($('code').value);
+    var canvas = $('canvas'), ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (!code) {
+      currentText = '';
+      $('fixedUrl').textContent = '–';
+      $('dest').textContent = '–'; $('dest').className = 'dest';
+      return;
+    }
+
+    var base = $('base').value.trim();
+    if (base && !base.endsWith('/')) base += '/';
+    currentText = base + '?' + code;
+    $('fixedUrl').textContent = currentText;
+
+    if (links[code]) {
+      $('dest').textContent = links[code]; $('dest').className = 'dest';
+    } else {
+      $('dest').textContent = 'Nog niet ingesteld — voeg "' + code + '" toe aan links.json.';
+      $('dest').className = 'dest missing';
+    }
+
+    var qr = makeQr(currentText);
+    var n = qr.getModuleCount(), quiet = 4;
+    var size = canvas.width, cell = size / (n + quiet * 2);
+    ctx.fillStyle = '#000';
+    for (var r = 0; r < n; r++)
+      for (var c = 0; c < n; c++)
+        if (qr.isDark(r, c))
+          ctx.fillRect(Math.floor((c + quiet) * cell), Math.floor((r + quiet) * cell),
+                       Math.ceil(cell), Math.ceil(cell));
+  }
+
+  function download(name, href) {
+    var a = document.createElement('a');
+    a.href = href; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  $('png').onclick = function () {
+    if (!currentText) return;
+    var qr = makeQr(currentText), n = qr.getModuleCount(), quiet = 4, scale = 20;
+    var px = (n + quiet * 2) * scale;
+    var cv = document.createElement('canvas'); cv.width = cv.height = px;
+    var ctx = cv.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, px, px); ctx.fillStyle = '#000';
+    for (var r = 0; r < n; r++)
+      for (var c = 0; c < n; c++)
+        if (qr.isDark(r, c)) ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+    download('qr-' + sanitize($('code').value) + '.png', cv.toDataURL('image/png'));
+  };
+
+  $('svg').onclick = function () {
+    if (!currentText) return;
+    var qr = makeQr(currentText), n = qr.getModuleCount(), quiet = 4, total = n + quiet * 2, d = '';
+    for (var r = 0; r < n; r++)
+      for (var c = 0; c < n; c++)
+        if (qr.isDark(r, c)) d += 'M' + (c + quiet) + ' ' + (r + quiet) + 'h1v1h-1z';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + total + ' ' + total +
+      '" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+    download('qr-' + sanitize($('code').value) + '.svg',
+      URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })));
+  };
+
+  $('copy').onclick = function () {
+    if (!currentText) return;
+    navigator.clipboard.writeText(currentText).then(function () {
+      $('copy').textContent = 'Gekopieerd!';
+      setTimeout(function () { $('copy').textContent = 'Kopieer URL'; }, 1500);
+    });
+  };
+
+  ['code', 'base', 'ecc'].forEach(function (id) { $(id).addEventListener('input', render); });
+
+  fetch('links.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      links = data || {};
+      $('codes').innerHTML = '';
+      Object.keys(links).forEach(function (k) {
+        var o = document.createElement('option'); o.value = k; $('codes').appendChild(o);
+      });
+      if (!$('code').value && Object.keys(links)[0]) $('code').value = Object.keys(links)[0];
+      render();
+    })
+    .catch(render);
+</script>
+</body>
+</html>
