@@ -21,7 +21,7 @@ $CONFIG['base_url'] = rtrim($CONFIG['base_url'], '/') . '/';
 
 const CODE_PATTERN = '/^[a-z0-9_-]{1,64}$/';
 // Mappen/bestanden in de root die geen QR-code mogen heten
-const RESERVED_CODES = ['admin', 'assets', 'vendor', 'inc', 'setup', 'index', 'config', 'schema'];
+const RESERVED_CODES = ['admin', 'assets', 'vendor', 'inc', 'dev', 'setup', 'index', 'config', 'schema'];
 
 function db(): PDO
 {
