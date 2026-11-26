@@ -40,7 +40,7 @@ Kopieer op de server `config.sample.php` naar `config.php` en vul in:
 > ⚠️ `base_url` staat in elke QR-code. Wijzig deze niet meer nadat je QR-codes hebt geprint.
 
 ### 5. Installeren
-Open `https://qr.pausefish.com/setup.php`, maak je account aan en **verwijder daarna `setup.php`** van de server.
+Open `https://qr.pausefish.com/setup.php`, vul ter controle het databasewachtwoord uit `config.php` in, maak je account aan en **verwijder daarna `setup.php`** van de server.
 
 Klaar: log in op `https://qr.pausefish.com/admin/`.
 

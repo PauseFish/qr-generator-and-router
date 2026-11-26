@@ -3,6 +3,15 @@
 
 declare(strict_types=1);
 
+// Nooit technische foutdetails aan bezoekers tonen; wel loggen (zie het foutlogboek in DirectAdmin).
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+set_exception_handler(function (Throwable $ex) {
+    error_log('[qr-dashboard] ' . $ex);
+    if (!headers_sent()) http_response_code(500);
+    echo 'Er ging iets mis. Probeer het later opnieuw.';
+});
+
 if (!is_file(__DIR__ . '/../config.php')) {
     http_response_code(500);
     exit('config.php ontbreekt. Kopieer config.sample.php naar config.php en vul je databasegegevens in.');
